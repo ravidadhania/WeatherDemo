@@ -37,6 +37,7 @@
     <string name="delete_alert">Are you sure you want to delete this?</string>
     <string name="exit_alert">Are you sure you want to exit from the App?</string>
     <string name="city_added_successfully">City added successfully</string>
+    <string name="select_city">Please select city</string>
     <string name="city_deleted_successfully">City deleted successfully</string>
     <string name="reset_bookmarked_city_successfully">Reset bookmarked cities successfully</string>
 

@@ -80,6 +80,7 @@ class MainActivity : BaseActivity() {
             drawerLayout.openDrawer(GravityCompat.START)
     }
 
+    // if we have bookmarked city then we display city screen otherwise map screen
     private fun checkWhichFragmentShouldBeOpen() {
         var cityMasterList = ArrayList<CityMaster>()
 
@@ -93,26 +94,31 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    //open map fragment
     fun openMapFragment() {
         clearBackStack()
         AndroidUtils.replaceFragment(supportFragmentManager, R.id.frameContainer, MapFragment())
     }
 
+    //open city fragment
     private fun openCityFragment() {
         clearBackStack()
         AndroidUtils.replaceFragment(supportFragmentManager, R.id.frameContainer, CityFragment())
     }
 
+    //open setting fragment
     private fun openSettingFragment() {
         clearBackStack()
         AndroidUtils.replaceFragment(supportFragmentManager, R.id.frameContainer, SettingFragment())
     }
 
+    //open help fragment
     private fun openHelpFragment() {
         clearBackStack()
         AndroidUtils.replaceFragment(supportFragmentManager, R.id.frameContainer, HelpFragment())
     }
 
+    //open City detail fragment
     fun openCityDetailFragment(latitude: Double, longitude: Double, city: String) {
 
         val fragment = CityDetailFragment()

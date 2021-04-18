@@ -58,10 +58,12 @@ class CityDetailFragment : BaseFragment() {
         }
     }
 
+    //Set Screen title
     private fun setTitle() {
         tvTitle.text = city
     }
 
+    //Get Data from bundle
     private fun getDataFromBundle() {
         latitude = arguments?.getDouble(MyConfig.Keys.latitude)!!
         longitude = arguments?.getDouble(MyConfig.Keys.longitude)!!
@@ -70,6 +72,7 @@ class CityDetailFragment : BaseFragment() {
         units = CustomPreference.getPreference(activity!!, MyConfig.PreferenceKeys.unit).toString()
     }
 
+    //API Call For today forecast
     private fun apiCallForGetTodayForeCast() {
         vmCommon.apiGetTodayForeCast(
             latitude,
@@ -79,6 +82,7 @@ class CityDetailFragment : BaseFragment() {
         )
     }
 
+    //API Call For Five Days forecast
     private fun apiCallForGetFiveDaysForeCast() {
         vmCommon.apiGetFiveDaysForeCast(
             latitude,
@@ -90,6 +94,7 @@ class CityDetailFragment : BaseFragment() {
 
     private fun subscribe() {
 
+        //API response of today forecast
         vmCommon.eventGetTodayForeCast.observe(activity!!, {
             observationOfAPI(it, object : IResponseParser<TodaysForecastResponseModel>(this) {
                 override fun onSuccess(it: RestResponse<TodaysForecastResponseModel>) {
@@ -117,6 +122,7 @@ class CityDetailFragment : BaseFragment() {
             })
         })
 
+        //API response of five days forecast
         vmCommon.eventGetFiveDaysForeCast.observe(activity!!, {
             observationOfAPI(it, object : IResponseParser<FiveDayForeCastResponseModel>(this) {
                 override fun onSuccess(it: RestResponse<FiveDayForeCastResponseModel>) {
@@ -151,12 +157,12 @@ class CityDetailFragment : BaseFragment() {
         })
     }
 
+    // set initial data for today's forecast
     private fun setData() {
         llTodayForecast.visibility = View.VISIBLE
         tvCity.text = city
         tvTemp.text = todayForecastResponseModel!!.main.temp.toInt().toString()
-        tvHumid.text =
-            getString(R.string.humidity) + " : " + todayForecastResponseModel!!.main.humidity.toString()
+        tvHumid.text = getString(R.string.humidity) + " : " + todayForecastResponseModel!!.main.humidity.toString()
         tvWind.text =
             getString(R.string.wind) + " : " + todayForecastResponseModel!!.wind.speed + " " + getString(
                 R.string.km_h
@@ -175,6 +181,7 @@ class CityDetailFragment : BaseFragment() {
         }
     }
 
+    // Filter for today forecast
     private fun filterTodayForeCast() {
         for (i in fiveDayForeCastResponseModel!!.list.indices) {
             if (AndroidUtils.convertToTimeFormat(
@@ -236,6 +243,7 @@ class CityDetailFragment : BaseFragment() {
 
     }
 
+    // Filter for five day forecast
     private fun filterFiveDayForeCast(list: ArrayList<FiveDayForeCastResponseModel.Slots>) {
         var date = ""
         var day = ""
@@ -262,8 +270,16 @@ class CityDetailFragment : BaseFragment() {
                     minTemp = list[i].main.temp_min
                 if (maxTemp < list[i].main.temp_max)
                     maxTemp = list[i].main.temp_max
+
+                humidity += list[i].main.humidity
+                wind += list[i].wind.speed
+                rain += list[i].clouds.all
             }
         }
+
+        humidity /= list.size
+        wind /= list.size
+        rain /= list.size
 
         val filteredFiveDayResponseModel = FilteredFiveDayResponseModel(
             date = date,
@@ -278,6 +294,7 @@ class CityDetailFragment : BaseFragment() {
         filteredFiveDayForeCastList.add(filteredFiveDayResponseModel)
     }
 
+    // adapter for Today forecast
     private fun setAdapterForTodayForeCast(list: List<FiveDayForeCastResponseModel.Slots?>?) {
         llTodayTempForecast.visibility = View.VISIBLE
 
@@ -303,6 +320,7 @@ class CityDetailFragment : BaseFragment() {
         todayForeCastAdapter.submitList(list)
     }
 
+    // adapter for FiveDay forecast
     private fun setAdapterForDayFiveForeCast(list: List<FilteredFiveDayResponseModel?>?) {
         llFiveDayTempForecast.visibility = View.VISIBLE
 

@@ -83,10 +83,18 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
 
         btnNext.setOnClickListener {
 
-            CoroutineScope(IO).launch {
-                insertDataInCityMaster(CityMaster(city, currentLatitude, currentLongitude), activity!!.application)
+            if (city == "") {
+                Toast.makeText(activity!!, R.string.select_city, Toast.LENGTH_SHORT).show()
+            } else {
+                CoroutineScope(IO).launch {
+                    insertDataInCityMaster(
+                        CityMaster(city, currentLatitude, currentLongitude),
+                        activity!!.application
+                    )
+                }
+                Toast.makeText(activity!!, R.string.city_added_successfully, Toast.LENGTH_SHORT)
+                    .show()
             }
-            Toast.makeText(activity!!, R.string.city_added_successfully, Toast.LENGTH_SHORT).show()
         }
 
         llDirection.setOnClickListener {
@@ -96,7 +104,7 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
 
         ivClear.setOnClickListener {
             autocompleteTextView.setText("")
-
+            city = ""
         }
 
         autocompleteTextView.addTextChangedListener(object : TextWatcher {
@@ -109,6 +117,7 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
             override fun onTextChanged(char: CharSequence?, p1: Int, p2: Int, p3: Int) {
                 if (char.toString() == "") {
                     ivClear.visibility = View.GONE
+                    city = ""
                 } else {
                     ivClear.visibility = View.VISIBLE
                 }
@@ -116,6 +125,7 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
         })
     }
 
+    //Set Screen title
     private fun setTitle() {
         tvTitle.text = getString(R.string.map)
     }
@@ -130,6 +140,7 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
         mapView.onPause()
     }
 
+    //Insert Data In City Master
     private fun insertDataInCityMaster(cityMaster: CityMaster, application: Application) {
         AppDatabase.get(application).getCityMasterDao().insertCityMaster(cityMaster)
     }
@@ -150,6 +161,7 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
         }
     }
 
+    //Initial SetUP for Google Place API
     private fun setUpPlaceAPI() {
 
         val apiKey = getString(R.string.google_place_api_key)
@@ -168,43 +180,43 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
     }
 
     private var autocompleteClickListener: AdapterView.OnItemClickListener =
-            AdapterView.OnItemClickListener { parent, view, position, id ->
-                val item: AutocompletePrediction? = mAdapter.getItem(position)
-                val placeID = item?.placeId
-                val placeFields: List<Place.Field> = listOf(
-                        Place.Field.ID,
-                        Place.Field.NAME,
-                        Place.Field.ADDRESS,
-                        Place.Field.LAT_LNG
-                )
-                var request: FetchPlaceRequest? = null
-                if (placeID != null) {
-                    request = FetchPlaceRequest.builder(placeID, placeFields).build()
-                }
-
-                if (request != null) {
-                    placesClient.fetchPlace(request).addOnSuccessListener {
-                        val place = it.place
-                        val stringBuilder = StringBuilder()
-                        stringBuilder.append("Name: ${place.name}\n")
-                        val queriedLocation: LatLng? = place.latLng
-                        stringBuilder.append("Latitude: ${queriedLocation?.latitude}\n")
-                        stringBuilder.append("Longitude: ${queriedLocation?.longitude}\n")
-                        stringBuilder.append("Address: ${place.address}\n")
-                        origin = place.latLng
-                        currentLatitude = queriedLocation?.latitude!!
-                        currentLongitude = queriedLocation.longitude
-
-                        addMarker()
-                        getCityFromLatLongAndSetInTextView()
-
-
-                    }.addOnFailureListener {
-                        it.printStackTrace()
-                    }
-                }
-                AndroidUtils.hideSoftKeyboard(activity!!)
+        AdapterView.OnItemClickListener { parent, view, position, id ->
+            val item: AutocompletePrediction? = mAdapter.getItem(position)
+            val placeID = item?.placeId
+            val placeFields: List<Place.Field> = listOf(
+                Place.Field.ID,
+                Place.Field.NAME,
+                Place.Field.ADDRESS,
+                Place.Field.LAT_LNG
+            )
+            var request: FetchPlaceRequest? = null
+            if (placeID != null) {
+                request = FetchPlaceRequest.builder(placeID, placeFields).build()
             }
+
+            if (request != null) {
+                placesClient.fetchPlace(request).addOnSuccessListener {
+                    val place = it.place
+                    val stringBuilder = StringBuilder()
+                    stringBuilder.append("Name: ${place.name}\n")
+                    val queriedLocation: LatLng? = place.latLng
+                    stringBuilder.append("Latitude: ${queriedLocation?.latitude}\n")
+                    stringBuilder.append("Longitude: ${queriedLocation?.longitude}\n")
+                    stringBuilder.append("Address: ${place.address}\n")
+                    origin = place.latLng
+                    currentLatitude = queriedLocation?.latitude!!
+                    currentLongitude = queriedLocation.longitude
+
+                    addMarker()
+                    getCityFromLatLongAndSetInTextView()
+
+
+                }.addOnFailureListener {
+                    it.printStackTrace()
+                }
+            }
+            AndroidUtils.hideSoftKeyboard(activity!!)
+        }
 
     override fun gotCurrentLocation(location: Location?) {
         if (location != null) {
@@ -219,6 +231,7 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
         }
     }
 
+    //Set Pin on Map
     private fun setMapPin() {
         if (currentLatitude != 0.0 && currentLongitude != 0.0) {
             googleMap!!.clear()
@@ -228,6 +241,7 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
         }
     }
 
+    // create marker on map
     private fun addMarker() {
         val markerOptions = MarkerOptions()
         markerOptions.position(origin!!)
@@ -238,6 +252,7 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
         googleMap!!.addMarker(markerOptions)
     }
 
+    // Get City Name from lat long
     private fun getCityFromLatLongAndSetInTextView() {
         if (currentLatitude != 0.0 && currentLongitude != 0.0) {
 
@@ -267,12 +282,13 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
         }
     }
 
+    // Call location server for current lat long
     private fun callLocationService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (activity!!.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED
-                    && activity!!.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED
+                == PackageManager.PERMISSION_GRANTED
+                && activity!!.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED
             ) {
                 currentLocationProvider = CurrentLocationProvider(activity!!, this)
                 currentLocationProvider!!.currentLocation
@@ -285,20 +301,21 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
         }
     }
 
+    // check location permission
     private fun checkForLocationPermission() {
         isLocationPermissionGranted = true
         var hasAccessFineLocation = 0
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             hasAccessFineLocation =
-                    activity!!.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                activity!!.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
         }
         var hasAccessCoarseLocation = 0
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             hasAccessCoarseLocation =
-                    activity!!.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+                activity!!.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
         }
         val permissions: MutableList<String> =
-                ArrayList()
+            ArrayList()
         if (hasAccessFineLocation != PackageManager.PERMISSION_GRANTED) {
             permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
         }
@@ -308,15 +325,16 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
         if (permissions.isNotEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestPermissions(
-                        permissions.toTypedArray(),
-                        MyConfig.REQUEST_CODE.REQUEST_CODE_PERMISSION
+                    permissions.toTypedArray(),
+                    MyConfig.REQUEST_CODE.REQUEST_CODE_PERMISSION
                 )
             }
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
-                                            grantResults: IntArray
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<String>,
+        grantResults: IntArray
     ) {
         when (requestCode) {
             MyConfig.REQUEST_CODE.REQUEST_CODE_PERMISSION -> {
@@ -326,7 +344,8 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
                         Log.d("Permissions", "Permission Granted: " + permissions[i])
                         if (i == permissions.size - 1) {
                             if (isLocationPermissionGranted) {
-                                currentLocationProvider = CurrentLocationProvider(activity!!, this@MapFragment)
+                                currentLocationProvider =
+                                    CurrentLocationProvider(activity!!, this@MapFragment)
                                 currentLocationProvider!!.currentLocation
                             }
                         }
@@ -349,10 +368,14 @@ class MapFragment : BaseFragment(), OnMapReadyCallback, CurrentLocationResult {
             MyConfig.REQUEST_CODE.REQUEST_CHECK_SETTINGS -> when (resultCode) {
                 Activity.RESULT_OK -> {
                     val currentLocationProvider =
-                            CurrentLocationProvider(activity!!, this@MapFragment)
+                        CurrentLocationProvider(activity!!, this@MapFragment)
                     currentLocationProvider.currentLocation
                 }
-                Activity.RESULT_CANCELED -> Toast.makeText(activity!!, R.string.enable_gps, Toast.LENGTH_SHORT).show()
+                Activity.RESULT_CANCELED -> Toast.makeText(
+                    activity!!,
+                    R.string.enable_gps,
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }

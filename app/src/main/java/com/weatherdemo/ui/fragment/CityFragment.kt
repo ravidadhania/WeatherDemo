@@ -41,10 +41,12 @@ class CityFragment : BaseFragment() {
         }
     }
 
+    //Set Screen title
     private fun setTitle() {
         tvTitle.text = getString(R.string.home)
     }
 
+    //Get City List From Local DB and Set Adapter for it
     private fun getCityMasterList() {
         cityMasterList = AppDatabase.get(activity!!.application).getCityMasterDao()
             .getCityList() as java.util.ArrayList<CityMaster>
@@ -56,6 +58,7 @@ class CityFragment : BaseFragment() {
         }
     }
 
+    //Adapter for City master list
     private fun setAdapterForCity(list: List<CityMaster?>?) {
         rvCity.visibility = View.VISIBLE
 
@@ -89,6 +92,7 @@ class CityFragment : BaseFragment() {
         cityAdapter.submitList(list)
     }
 
+    //Alert dialog for delete city
     fun showAlertDialogForDelete(context: Context?, message: String?, position: Int?) {
         val builder: AlertDialog.Builder = AlertDialog.Builder(
             ContextThemeWrapper(context, R.style.DialogTheme)
@@ -108,6 +112,7 @@ class CityFragment : BaseFragment() {
             }.show()
     }
 
+    //Delete City From Local DB
     private fun deleteCityFromLocalDB(idNumber: String, application: Application) {
         AppDatabase.get(application).getCityMasterDao().deleteCity(idNumber)
         getCityMasterList()
